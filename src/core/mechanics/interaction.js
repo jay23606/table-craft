@@ -27,9 +27,20 @@ export function installInteraction(T) {
   //   'once': once around — everyone bids or passes exactly once, the highest bid wins.
   //   'dutch': the price drops (T.auction.lower) until someone takes it (T.auction.take).
   const A = {};
-  A.create = (ids, { kind = 'open', min = 1, step = 1, start = 0, price = 0, floor = 0 } = {}) => {
-    const order = [...(ids || [])];
-    const i = typeof start === 'number' ? start : Math.max(0, order.indexOf(start));
+  A.create = (ids, { kind = 'open', min = 1, step = 1, start = 0, price = 0, floor = 0, exclude = [] } = {}) => {
+    const original = [...(ids || [])];
+    const order = original.filter((id) => !exclude.includes(id));
+    const startId = typeof start === 'number' ? original[start] : start;
+    let i = order.indexOf(startId);
+    if (i < 0 && original.includes(startId)) {
+      const from = original.indexOf(startId);
+      for (let k = 1; k <= original.length; k++) {
+        const eligible = original[(from + k) % original.length];
+        i = order.indexOf(eligible);
+        if (i >= 0) break;
+      }
+    }
+    if (i < 0) i = 0;
     return kind === 'dutch'
       ? { kind, order, price, step, floor, leader: null, high: 0, closed: false }
       : { kind, order, i, min, step, high: 0, leader: null, passed: [], acted: [] };

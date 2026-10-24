@@ -447,6 +447,18 @@ test('T.auction: open ascending, once around, dutch, sealed and legal bids', () 
   assert.deepEqual([...ids].sort(), ['a', 'b']);
 });
 
+test('T.auction: exclude bidders from open and once-around auctions', () => {
+  const once = T.auction.create(['a', 'b', 'c'], { kind: 'once', exclude: ['a'], start: 'a' });
+  assert.equal(T.auction.turn(once), 'b');
+  assert.deepEqual(once.order, ['b', 'c']);
+  const open = T.auction.create(['a', 'b', 'c'], { exclude: ['a'], start: 'a' });
+  assert.deepEqual(open.order, ['b', 'c']);
+  assert.equal(T.auction.turn(open), 'b');
+  const empty = T.auction.create(['a', 'b'], { kind: 'once', exclude: ['a', 'b'] });
+  assert.ok(T.auction.done(empty));
+  assert.equal(T.auction.winner(empty), null);
+});
+
 test('T.vote: plurality, ties, weights and majorities', () => {
   const v = { a: 'yes', b: 'no', c: 'yes', d: null };
   assert.deepEqual(T.vote.tally(v), { yes: 2, no: 1 });
@@ -598,6 +610,7 @@ function probe(T, random) {
   const pend = []; T.pending.push(pend, { playerId: 'a', options: [1, 2] }); out.pending = T.pending.actions(pend, 'a');
   const sec = T.secret.create(['a', 'b']); T.secret.commit(sec, 'a', 3); out.secret = T.secret.view(sec, 'b');
   const au = T.auction.create(['a', 'b']); T.auction.bid(au, 'a', 2); T.auction.pass(au, 'b'); out.auction = [T.auction.winner(au), T.auction.sealed({ a: 1, b: 1 }, { random })];
+  const excludedAuction = T.auction.create(['a', 'b'], { kind: 'once', exclude: ['a'] }); out.auctionExclude = [excludedAuction.order, T.auction.turn(excludedAuction)];
   const hands = { a: [1], b: [2] }; T.draft.pass(hands, ['a', 'b']); out.draft = hands;
   const deck = random.shuffle(T.range(20)); const row = []; T.market.refill(row, 4, deck, [], random); T.market.take(row, 1); out.market = row;
   const z = T.deckbuild.create(T.range(10), random, 5); T.deckbuild.cleanup(z, random, 5); out.deckbuild = z;

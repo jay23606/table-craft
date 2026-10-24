@@ -291,7 +291,7 @@ One plain object for every turn-based auction: `T.auction.create(ids, opts)`.
 
 | | |
 |---|---|
-| `T.auction.create(ids, { kind, min = 1, step = 1, start = 0, price, floor }?)` | `start`: seat index or id of the first bidder |
+| `T.auction.create(ids, { kind, min = 1, step = 1, start = 0, price, floor, exclude }?)` | `start`: seat index or id of the first eligible bidder; `exclude` omits bidders (if `start` is excluded, the next eligible seat starts) |
 | `T.auction.turn(a)` · `T.auction.minBid(a)` | who bids next (`null` when over) / the lowest legal bid |
 | `T.auction.bid(a, id, amount)` · `T.auction.pass(a, id)` | → `true`, or `false` when it is not their turn or the bid is too low |
 | `T.auction.legalBids(a, id, budget)` | the amounts `id` may bid now, up to `budget` — for `actions()` |

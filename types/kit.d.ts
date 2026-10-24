@@ -380,8 +380,8 @@ export type Auction = TurnAuction | DutchAuction;
 
 /** `T.auction`: open, once-around, Dutch and sealed-bid auctions. */
 export interface AuctionKit {
-  /** New auction; `start`: seat index or id of the first bidder. */
-  create(ids: readonly PlayerId[], opts?: { kind?: 'open' | 'once' | 'dutch'; min?: number; step?: number; start?: number | PlayerId; price?: number; floor?: number }): Auction;
+  /** New auction; `start`: seat index or id of the first eligible bidder; `exclude` omits bidders. */
+  create(ids: readonly PlayerId[], opts?: { kind?: 'open' | 'once' | 'dutch'; min?: number; step?: number; start?: number | PlayerId; price?: number; floor?: number; exclude?: readonly PlayerId[] }): Auction;
   /** Is it over? */
   done(a: Auction): boolean;
   /** Who bids next (`null` when over; anyone may take a Dutch offer). */
