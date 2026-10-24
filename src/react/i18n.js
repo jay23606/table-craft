@@ -16,6 +16,7 @@ const en = {
   close: 'Close',
   closeEsc: 'Close (Esc)',
   enlarge: 'Enlarge',
+  stageHide: 'Tuck away', stageShow: 'Show',
   table: 'Table',
   // toolbar
   camTable: 'Overview (1)', camMe: 'My area (2)', camTop: 'Top-down (3)',
@@ -77,6 +78,7 @@ const tr = {
   close: 'Kapat',
   closeEsc: 'Kapat (Esc)',
   enlarge: 'Büyüt',
+  stageHide: 'Gizle', stageShow: 'Göster',
   table: 'Masa',
   camTable: 'Genel bakış (1)', camMe: 'Benim alanım (2)', camTop: 'Kuşbakışı (3)',
   log: 'Oyun günlüğü (L)', mute: 'Sesi kapat (M)', unmute: 'Sesi aç (M)', settings: 'Ayarlar', help: 'Kontroller (?)', fullscreen: 'Tam ekran (F)', exitFullscreen: 'Tam ekrandan çık (F)',

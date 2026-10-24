@@ -1,12 +1,14 @@
 // <Tabletop>: the 3D table + HUD for one player's view ({ type: 'tabletop', scene, hud } from the game's view()).
 // HUD layers: top bar (title · turn indicator · tools), players, Spotlight (other players' moves), game log,
-// decision dock (hud.prompt), banner/toast queues, card close-up and the end-of-game scoreboard.
+// decision dock (hud.prompt), stage (hud.stage: a fight / an encounter in the middle), banner/toast queues, card close-up
+// and the end-of-game scoreboard.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import UiNode from './UiNode';
 import { TabletopWorld } from '../engine/world';
 import { TableAudio } from '../engine/audio';
 import { Icon } from './hud/icons';
 import Spotlight from './hud/Spotlight';
+import Stage from './hud/Stage';
 import GameLog from './hud/GameLog';
 import { CardCanvas, CardInspector } from './hud/CardCanvas';
 import { SettingsPanel, HelpPanel, ResultModal } from './hud/Panels';
@@ -457,8 +459,10 @@ export default function Tabletop({ view, fx, assets, onMove, you, serverOffset =
 
       {spot && settings.spot !== 'off' && (
         // on your turn the Spotlight moves aside: the centre of the table and every click stay yours
-        <Spotlight entry={spot} world={world.current} queued={spots.length - 1} mode={meActive ? 'side' : settings.spot} scale={ANIM[settings.anim] || 1} onDone={spotDone} onInspect={setInspect} />
+        <Spotlight entry={spot} world={world.current} queued={spots.length - 1} mode={meActive || hud.stage ? 'side' : settings.spot} scale={ANIM[settings.anim] || 1} onDone={spotDone} onInspect={setInspect} />
       )}
+
+      <Stage stage={hud.stage} world={world.current} onInspect={setInspect} />
 
       {hud.prompt && (
         <div ref={promptRef} className={`tc-prompt ${promptMin ? 'min' : ''} ${hud.promptTone || ''} ${meActive ? 'myturn' : ''}`}>
