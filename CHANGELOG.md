@@ -42,6 +42,7 @@ and the project uses [Semantic Versioning](https://semver.org/). Until 1.0, mino
 - Scene checks for hex positions and link ends; `supply-lines` example and MCP template.
 
 ### Changed
+- **Selectable objects:** a clickable card, token, die or board now gets a contrast frame around its edge (dark band + bright core, the object's corner radius) that beats like a heart, instead of a soft glow under it that was hard to follow on light tables and under fanned hands. The frame rides on top of flat objects, so a hand card that lifts on hover keeps it. `glow` colours the frame; without `click` it pulses gently. Hex tiles keep their outline and beat too; links keep the soft glow. `prefers-reduced-motion` gets a steady frame. The `highlight` fx flashes the same frame.
 - Dutch auctions: `T.auction.take` now rejects IDs not in `order`, and creating one with no participants closes it immediately.
 
 ### Fixed

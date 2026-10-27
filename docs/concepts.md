@@ -42,7 +42,7 @@ dropped on it. You never write animation code for state changes.
 
 ## Intents
 
-Players click glowing objects (`click: { name, args }`) or submit forms in the HUD. Both send an **intent** — a move
+Players click framed objects (`click: { name, args }`) or submit forms in the HUD. Both send an **intent** — a move
 name and arguments — to the host. The host runs `moves[name](state, ctx)`; the move validates and either returns the
 new state or `{ error }`. Errors go back to the sender only; nothing changes.
 

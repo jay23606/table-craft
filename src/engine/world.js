@@ -5,8 +5,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as CANNON from 'cannon-es';
 import { layoutScene, footprint, CARD_T, cardSize, tokenDims } from './layout';
 import { FaceStore, shade } from './faces';
-import { makeCard, updateCardFaces, makeDeck, setDeckCount, updateDeckTop, makeDie, dieRestQuat, makeToken, rebuildToken, makeBoard, makeTimer, updateTimer, makeLabelSprite, makeFlatText, makeHalo, texSize, makeHexTile, hexTileKey, makeHexHalo, makeLink, linkKey, setGhost } from './meshes';
+import { makeCard, updateCardFaces, makeDeck, setDeckCount, updateDeckTop, makeDie, dieRestQuat, makeToken, rebuildToken, makeBoard, makeTimer, updateTimer, makeLabelSprite, makeFlatText, makeHalo, makeOutline, disposeOutline, OUTLINE_COLOR, texSize, makeHexTile, hexTileKey, makeHexHalo, makeLink, linkKey, setGhost } from './meshes';
 import { Environment } from './env';
+import { heartbeat } from './pulse';
 import { simulateRoll, DiceRoll } from './dice';
 import { fontsReady } from './fonts';
 
@@ -269,17 +270,43 @@ export class TabletopWorld {
     return this.store.preview(up ? 'card' : 'back', up ? item.face : (item.back || {}), Math.round(w * s), Math.round(height));
   }
 
+  // keeps a selection frame / halo on its object every frame and animates it (heartbeat for clickables)
+  _placeHalo(ent, fp, pulse, hb) {
+    const h = ent.halo; const m = ent.mesh; const u = h.userData;
+    const base = ent.home?.base ?? 0;
+    let y = base + (u.lift ?? 0.004);
+    if (u.outline && u.flat) {
+      // flat things carry the frame on their top face, so it rides along when a hand card lifts on hover
+      y = ent.kind === 'card' ? m.position.y + CARD_T / 2 + 0.02 : ent.kind === 'deck' ? m.position.y + m.scale.y + 0.02 : ent.kind === 'board' ? m.position.y + fp.h + 0.02 : m.position.y + 0.01;
+    }
+    h.position.set(m.position.x, y, m.position.z);
+    h.rotation.z = new THREE.Euler().setFromQuaternion(m.quaternion, 'YXZ').y;
+    const k = u.beat ? hb : pulse;
+    if (u.outline) {
+      const [dark, core] = h.children;
+      core.material.opacity = u.beat ? 0.6 + 0.4 * k : 0.7 + 0.3 * k;
+      dark.material.opacity = u.beat ? 0.35 + 0.25 * k : 0.45;
+      const sc = u.beat ? 1 + 0.025 * k : 1; // hafif büyüme: kalınlık artmasın, yalnız nabız hissi
+      h.scale.set(sc, sc, 1);
+    } else {
+      h.material.opacity = u.beat ? 0.3 + 0.65 * k : 0.25 + pulse * 0.3;
+    }
+  }
+
   // briefly highlights objects on the table (to find the spotlighted card on the table)
   flash(ids = [], color = '#7fd3ff', ms = 1600) {
     for (const id of ids) {
       const ent = this.entries.get(id);
       if (!ent) continue;
       const fp = footprint(ent.spec, ent.lay);
-      const h = ent.kind === 'hex' ? makeHexHalo(ent.lay.hex?.size || 5, ent.lay.hex?.orient, color) : makeHalo(fp.w, fp.d, color);
-      h.position.copy(ent.mesh.position).setY((ent.home?.base ?? 0) + (ent.kind === 'hex' ? fp.h + 0.03 : 0.005));
+      const [ow, od] = ent.kind === 'card' || ent.kind === 'deck' ? cardSize(ent.spec) : [fp.w, fp.d];
+      const h = ent.kind === 'hex' ? makeHexHalo(ent.lay.hex?.size || 5, ent.lay.hex?.orient, color) : ent.kind === 'link' ? makeHalo(fp.w, fp.d, color, 0.9) : makeOutline(ow, od, { color });
+      const top = ent.kind === 'card' ? ent.mesh.position.y + CARD_T / 2 + 0.03 : (ent.home?.base ?? 0) + (ent.kind === 'hex' ? fp.h + 0.03 : 0.005);
+      h.position.copy(ent.mesh.position).setY(top);
       h.rotation.z = new THREE.Euler().setFromQuaternion(ent.mesh.quaternion, 'YXZ').y;
       this.root.add(h);
-      this.tweens.push({ custom: (k) => { h.material.opacity = (Math.sin(k * Math.PI * 4 - Math.PI / 2) * 0.5 + 0.5) * (1 - k * 0.4); }, t: 0, dur: ms, done: () => { h.removeFromParent(); h.geometry.dispose(); } });
+      const mats = h.userData.outline ? h.children.map((c) => c.material) : [h.material];
+      this.tweens.push({ custom: (k) => { const o = (Math.sin(k * Math.PI * 4 - Math.PI / 2) * 0.5 + 0.5) * (1 - k * 0.4); for (const mt of mats) mt.opacity = o; }, t: 0, dur: ms, done: () => { h.removeFromParent(); if (h.userData.outline) disposeOutline(h); else h.geometry.dispose(); } });
     }
   }
 
@@ -415,14 +442,21 @@ export class TabletopWorld {
       ent.labelKey = lkey;
     }
     const glow = o.glow || (o.click && !o.disabled ? (o.glow === false ? null : 'soft') : null);
-    const gkey = glow ? `${glow}:${fp.w.toFixed(1)}:${fp.d.toFixed(1)}` : null;
+    // clickable objects beat like a heart; an explicit `glow` without a click pulses gently
+    const beat = !!(o.click && !o.disabled && o.glow !== false);
+    const color = glow === 'soft' || glow === true ? OUTLINE_COLOR : glow;
+    const flat = ['card', 'deck', 'board', 'text'].includes(ent.kind);
+    const [ow, od] = ent.kind === 'card' || ent.kind === 'deck' ? cardSize(o) : [fp.w, fp.d]; // unrotated size: the frame turns with the mesh
+    const round = ent.kind === 'token' && ['disc', 'coin', 'cylinder'].includes(o.shape || 'disc');
+    const gkey = glow ? `${color}:${beat}:${ow.toFixed(1)}:${od.toFixed(1)}:${round}` : null;
     if (gkey !== ent.haloKey) {
-      if (ent.halo) { ent.halo.removeFromParent(); ent.halo.geometry.dispose(); ent.halo = null; }
+      if (ent.halo) { ent.halo.removeFromParent(); if (ent.halo.userData.outline) disposeOutline(ent.halo); else ent.halo.geometry.dispose(); ent.halo = null; }
       if (glow) {
-        const color = glow === 'soft' || glow === true ? '#f2c14e' : glow;
-        // hex tiles get an outline on their top face; everything else a soft glow on the surface it stands on
-        ent.halo = ent.kind === 'hex' ? makeHexHalo(ent.lay?.hex?.size || 5, ent.lay?.hex?.orient, color) : makeHalo(fp.w, fp.d, color, ent.kind === 'link' ? 0.9 : 2.4);
-        ent.halo.userData.soft = glow === 'soft'; ent.halo.userData.lift = ent.kind === 'hex' ? fp.h + 0.03 : 0.004;
+        // hex tiles get an outline on their top face, links a soft glow, everything else a contrast frame around its edge
+        if (ent.kind === 'hex') ent.halo = makeHexHalo(ent.lay?.hex?.size || 5, ent.lay?.hex?.orient, color);
+        else if (ent.kind === 'link') ent.halo = makeHalo(fp.w, fp.d, color, 0.9);
+        else ent.halo = makeOutline(ow, od, { color, round });
+        Object.assign(ent.halo.userData, { beat, flat, lift: ent.kind === 'hex' ? fp.h + 0.03 : 0.004 });
         this.root.add(ent.halo);
       }
       ent.haloKey = gkey;
@@ -764,6 +798,7 @@ export class TabletopWorld {
     // decorations: label/halo positions, hover lift, sand timers
     const now = Date.now() + this.serverOffset;
     const pulse = 0.55 + 0.45 * Math.sin(performance.now() / 260);
+    const hb = reduceMotion ? 0.6 : heartbeat(performance.now());
     for (const ent of this.entries.values()) {
       const o = ent.spec; const m = ent.mesh;
       if (ent.kind === 'card' && !this.tweens.some((t) => t.obj === m) && ent.home) {
@@ -772,7 +807,7 @@ export class TabletopWorld {
       }
       const fp = footprint(o, ent.lay);
       if (ent.label) ent.label.position.set(m.position.x, m.position.y + (ent.kind === 'deck' ? m.scale.y : fp.h) + 1.6, m.position.z);
-      if (ent.halo) { ent.halo.position.set(m.position.x, (ent.home?.base ?? 0) + (ent.halo.userData.lift ?? 0.004), m.position.z); ent.halo.rotation.z = new THREE.Euler().setFromQuaternion(m.quaternion, 'YXZ').y; ent.halo.material.opacity = ent.halo.userData.soft ? 0.25 + pulse * 0.3 : 0.55 + pulse * 0.4; }
+      if (ent.halo) this._placeHalo(ent, fp, pulse, hb);
       if (ent.kind === 'timer' && o.endsAt) {
         const total = (o.duration || 60) * 1000; const left = Math.max(0, o.endsAt - now);
         updateTimer(m, left / total);

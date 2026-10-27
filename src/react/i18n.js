@@ -36,7 +36,7 @@ const en = {
   controls: 'Controls',
   helpRows: [
     ['Drag', 'Rotate the table'], ['Right-drag · two fingers', 'Pan'], ['Wheel', 'Zoom'], ['Hover', 'Large card preview'],
-    ['Click', 'Glowing objects make a move, others open a close-up'], ['Double-click', 'Reset the camera (on empty table)'],
+    ['Click', 'Framed, pulsing objects make a move, others open a close-up'], ['Double-click', 'Reset the camera (on empty table)'],
     ['1 · 2 · 3', 'Camera: overview · my area · top-down'], ['L', 'Toggle the game log'], ['Space', 'Skip the current spotlight'],
     ['M', 'Mute / unmute'], ['F', 'Fullscreen'], ['Esc', 'Close the open window'], ['?', 'This help'],
   ],
@@ -93,7 +93,7 @@ const tr = {
   controls: 'Kontroller',
   helpRows: [
     ['Sürükle', 'Masayı döndür'], ['Sağ tık · iki parmak', 'Kaydır'], ['Tekerlek', 'Yakınlaş / uzaklaş'], ['Üzerine gel', 'Kartın büyük önizlemesi'],
-    ['Tıkla', 'Parlayan objede hamle yap, diğerlerini incele'], ['Çift tık', 'Boş masada kamerayı sıfırla'],
+    ['Tıkla', 'Çerçeveli, atan objede hamle yap, diğerlerini incele'], ['Çift tık', 'Boş masada kamerayı sıfırla'],
     ['1 · 2 · 3', 'Kamera: genel bakış · benim alanım · kuşbakışı'], ['L', 'Oyun günlüğünü aç/kapat'], ['Boşluk', 'Sahne Önü’ndeki hamleyi geç'],
     ['M', 'Sesi aç/kapat'], ['F', 'Tam ekran'], ['Esc', 'Açık pencereyi kapat'], ['?', 'Bu yardım'],
   ],
