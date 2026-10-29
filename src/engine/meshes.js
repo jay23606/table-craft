@@ -512,6 +512,38 @@ export function makeFlatText(text, opts = {}) {
   return m;
 }
 
+// ---------------------------------------------------------------- outline (selectable / highlighted objects)
+// A contrast frame that follows the object's edge: a dark band with a bright core, both with the object's corner radius.
+// Unlit and normally blended, so it reads the same on light felt, dark wood and over other cards (an additive glow
+// under the object washed out on light tables and hid under the card it marked). Built in the XY plane; lay it flat
+// with rotation.x = -PI/2 like the halo. `round` makes a circle (disc tokens).
+function roundedRect(path, w, h, r) {
+  const x0 = -w / 2, y0 = -h / 2; r = Math.max(0, Math.min(r, w / 2, h / 2));
+  path.moveTo(x0 + r, y0); path.lineTo(x0 + w - r, y0); path.quadraticCurveTo(x0 + w, y0, x0 + w, y0 + r);
+  path.lineTo(x0 + w, y0 + h - r); path.quadraticCurveTo(x0 + w, y0 + h, x0 + w - r, y0 + h);
+  path.lineTo(x0 + r, y0 + h); path.quadraticCurveTo(x0, y0 + h, x0, y0 + h - r);
+  path.lineTo(x0, y0 + r); path.quadraticCurveTo(x0, y0, x0 + r, y0);
+  return path;
+}
+export const OUTLINE_COLOR = '#ffd23f';
+export function makeOutline(w, d, { color = OUTLINE_COLOR, round = false, gap = 0.1, core = 0.2, edge = 0.07 } = {}) {
+  const g = new THREE.Group();
+  const r0 = round ? Math.min(w, d) / 2 : Math.min(w, d) * 0.055;
+  const ring = (inner, outer, col, opacity, order) => {
+    const sh = roundedRect(new THREE.Shape(), w + 2 * outer, d + 2 * outer, r0 + outer);
+    sh.holes.push(roundedRect(new THREE.Path(), w + 2 * inner, d + 2 * inner, r0 + inner));
+    const m = new THREE.Mesh(new THREE.ShapeGeometry(sh, round ? 24 : 6), new THREE.MeshBasicMaterial({ color: new THREE.Color(col), transparent: true, opacity, depthWrite: false }));
+    m.renderOrder = order;
+    return m;
+  };
+  g.add(ring(Math.max(0, gap - edge), gap + core + edge, '#0b0d12', 0.55, 3)); // thin dark edge: contrast on light tables
+  g.add(ring(gap, gap + core, color, 1, 4));                                    // bright core: contrast on dark tables
+  g.rotation.x = -Math.PI / 2;
+  g.userData.outline = true;
+  return g;
+}
+export function disposeOutline(g) { g.traverse((c) => { if (c.isMesh) { c.geometry.dispose(); c.material.dispose(); } }); }
+
 // halo under selectable/glowing objects
 let haloTex = null;
 export function makeHalo(w, d, color, pad = 2.4) {

@@ -1,6 +1,6 @@
 {
   "name": "@table-craft/table-craft",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Open-source board game and card game engine: write the rules in one JavaScript file and get a 3D multiplayer tabletop with physics dice, bots, an automated referee and a balance lab.",
   "license": "MIT",
   "type": "module",

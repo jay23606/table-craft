@@ -138,8 +138,8 @@ Common props:
 | `kind` | `card` · `deck` · `die` · `token` · `board` · `timer` · `text` · `hex` · `link` |
 | `zone` or `at: [x, z]` (+ `seat`) | where it lives (in a hex zone: `cell`, `corner`, `side`, `vertex`, `edge`) |
 | `order`, `rot` | position in the zone, extra rotation in degrees |
-| `click: { name, args }` | makes it clickable (glows, pulses) and sends that move |
-| `glow: true \| color \| false`, `disabled` | highlight / disable the click |
+| `click: { name, args }` | makes it clickable and sends that move; it gets a contrast frame that beats like a heart (steady when the player prefers reduced motion) |
+| `glow: true \| color \| false`, `disabled` | highlight (a frame in that colour; without `click` it pulses gently) / no frame / disable the click |
 | `tip` | hover text |
 | `label`, `labelColor` | floating label (decks and stacks show their count automatically); `labelColor` is its background |
 | `enterFrom: zoneId \| objId` | a new object flies in from there (cards drawn from a deck) |

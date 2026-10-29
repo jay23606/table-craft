@@ -18,7 +18,7 @@ Add `to: [playerIds]` to any effect to show it only to those players.
 | `sound` | `name`, `vol?` (0–1, default 1) | play a built-in sound or a `scene.sounds` key |
 | `shake` | `strength?` (0.7), `sound?` (`storm`) | camera shake — storms, explosions, betrayals |
 | `toss` | `zone` or `target`, `from?` (playerId or objId), `n`, `token: { shape, color, face }` | tokens physically tossed onto the table (gold paid, damage dealt) |
-| `highlight` | `ids`, `color?`, `ms?` | pulse a glow under objects |
+| `highlight` | `ids`, `color?`, `ms?` | flash a frame around objects |
 | `reveal` | `ids`, `by?`, `title?`, `text?` | put objects on the [Spotlight](following-the-game.md) for everyone |
 | `focus` | `zone` / `id` / `preset: 'table' \| 'me' \| 'top' \| 'center'` | move the camera (`center`: a fixed 45° view of the table's centre, not fitted to the HUD) |
 

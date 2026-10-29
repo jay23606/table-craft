@@ -945,6 +945,34 @@ export interface Hud {
   panels?: HudPanel[];
   /** The last ~40 log lines. */
   log?: string[];
+  /** A scene card in the middle of the table (a fight, an encounter, a vote); stays while the view sends it. */
+  stage?: HudStage | null;
+}
+
+/** `hud.stage`: cards face to face, the dice and a few lines — everyone sees the same moment. */
+export interface HudStage {
+  /** Stable id of this moment; a player who tucked the stage away sees it again when the id changes. */
+  id: string;
+  /** Heading ("Warrior ⚔ Bone Guard"). */
+  title?: string;
+  /** Second line (the test: "2 dice + Strength 2 ≥ 8"). */
+  subtitle?: string;
+  /** Up to 4 cards drawn large, left to right. */
+  cards?: Array<{ id?: string; face: Face; back?: Face; size?: CardSizeName | Vec2; faceUp?: boolean; label?: string }>;
+  /** `true` puts ⚔ between the cards; a string uses that glyph. */
+  vs?: boolean | string;
+  /** Dice to show (1–6 render as die faces); `{ value, dim }` greys a die (e.g. the one dropped with disadvantage). */
+  dice?: Array<number | { value: number; dim?: boolean }>;
+  /** Text after the dice ("+2 = 9 / 8"). */
+  total?: string;
+  /** Lines below (dialogue lines starting with a quote are set in italics). */
+  lines?: string[];
+  /** Outcome badge. */
+  result?: { text: string; tone?: 'good' | 'bad' | 'info' };
+  /** Frame colour: 'good' | 'bad' | ''. */
+  tone?: string;
+  /** Accent colour. */
+  accent?: string;
 }
 
 /** A 3D table view. */

@@ -16,6 +16,7 @@ const en = {
   close: 'Close',
   closeEsc: 'Close (Esc)',
   enlarge: 'Enlarge',
+  stageHide: 'Tuck away', stageShow: 'Show',
   table: 'Table',
   // toolbar
   camTable: 'Overview (1)', camMe: 'My area (2)', camTop: 'Top-down (3)',
@@ -35,7 +36,7 @@ const en = {
   controls: 'Controls',
   helpRows: [
     ['Drag', 'Rotate the table'], ['Right-drag · two fingers', 'Pan'], ['Wheel', 'Zoom'], ['Hover', 'Large card preview'],
-    ['Click', 'Glowing objects make a move, others open a close-up'], ['Double-click', 'Reset the camera (on empty table)'],
+    ['Click', 'Framed, pulsing objects make a move, others open a close-up'], ['Double-click', 'Reset the camera (on empty table)'],
     ['1 · 2 · 3', 'Camera: overview · my area · top-down'], ['L', 'Toggle the game log'], ['Space', 'Skip the current spotlight'],
     ['M', 'Mute / unmute'], ['F', 'Fullscreen'], ['Esc', 'Close the open window'], ['?', 'This help'],
   ],
@@ -77,6 +78,7 @@ const tr = {
   close: 'Kapat',
   closeEsc: 'Kapat (Esc)',
   enlarge: 'Büyüt',
+  stageHide: 'Gizle', stageShow: 'Göster',
   table: 'Masa',
   camTable: 'Genel bakış (1)', camMe: 'Benim alanım (2)', camTop: 'Kuşbakışı (3)',
   log: 'Oyun günlüğü (L)', mute: 'Sesi kapat (M)', unmute: 'Sesi aç (M)', settings: 'Ayarlar', help: 'Kontroller (?)', fullscreen: 'Tam ekran (F)', exitFullscreen: 'Tam ekrandan çık (F)',
@@ -91,7 +93,7 @@ const tr = {
   controls: 'Kontroller',
   helpRows: [
     ['Sürükle', 'Masayı döndür'], ['Sağ tık · iki parmak', 'Kaydır'], ['Tekerlek', 'Yakınlaş / uzaklaş'], ['Üzerine gel', 'Kartın büyük önizlemesi'],
-    ['Tıkla', 'Parlayan objede hamle yap, diğerlerini incele'], ['Çift tık', 'Boş masada kamerayı sıfırla'],
+    ['Tıkla', 'Çerçeveli, atan objede hamle yap, diğerlerini incele'], ['Çift tık', 'Boş masada kamerayı sıfırla'],
     ['1 · 2 · 3', 'Kamera: genel bakış · benim alanım · kuşbakışı'], ['L', 'Oyun günlüğünü aç/kapat'], ['Boşluk', 'Sahne Önü’ndeki hamleyi geç'],
     ['M', 'Sesi aç/kapat'], ['F', 'Tam ekran'], ['Esc', 'Açık pencereyi kapat'], ['?', 'Bu yardım'],
   ],

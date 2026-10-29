@@ -17,6 +17,7 @@ hud = {
   promptTone: 'wait',                            // grey dock while waiting for others
   promptTitle: 'Choose a port',
   panels: [{ id, title, icon, side: 'left' | 'right', open: true, node: UiNode }],
+  stage: { id, title, subtitle, cards, vs, dice, total, lines, result },   // optional: a fight / an encounter
   log: ['R1 · Ada rolled a 4.', ...],
 }
 ```
@@ -32,6 +33,26 @@ indicator at the top ("Turn: Bo · · ·" / "Your turn") is driven by `active`.
 The dock in the bottom-right corner holds what the viewing player has to decide now: buttons, a form, a short
 explanation. It glows when it is your turn and can be minimised. Use `promptTone: 'wait'` while the player is only
 watching.
+
+## Stage
+
+`hud.stage` puts one moment in the middle of the table, large and readable for everyone: a fight (two cards face to
+face, the dice, the outcome), an encounter (a character card and its lines), a vote. It is part of the view, so it stays
+as long as your state says so — usually from "a test is coming" until the next decision — and the decision itself stays
+in the prompt dock. Players can tuck it away; a new `id` brings it back. While a stage is shown the Spotlight moves aside.
+
+```js
+stage: {
+  id: `fight:${s.turn}`,                                   // new id = a new moment
+  title: 'Warrior ⚔ Bone Guard', subtitle: '2 dice + Strength 2 ≥ 8',
+  cards: [{ face: heroFace, label: 'Ada' }, { face: monsterFace, label: 'difficulty 8' }], vs: true,
+  dice: [4, 3], total: '+ 2 = 9 / 8',                      // after the roll; omit before
+  lines: ['“None shall pass.”'],                           // lines starting with a quote are set in italics
+  result: { text: 'SUCCESS', tone: 'good' },               // 'good' | 'bad' | 'info'
+}
+```
+
+Hidden information rules apply: build the stage per viewer in `view()` and leave out what that player may not see.
 
 ## Panels
 

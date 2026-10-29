@@ -5,52 +5,22 @@ and the project uses [Semantic Versioning](https://semver.org/). Until 1.0, mino
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-10-27
+
 ### Added
+- **Dutch auctions:** `T.auction.create` can exclude ineligible bidders, and `T.auction.decline` lowers the price after all eligible bidders decline.
 - **Area scoring:** `T.area.majority` supports `{ fewest: true }`, including zero-count players by default.
 - **Rules kit:** `T.market.refill` accepts `{ reshuffle: false }` to leave the discard pile out of the deck when refilling.
 - **Rules kit:** `T.sets.ofAKind(counts, n, kind?)` can count groups for one kind or a list of kinds.
 - **Worker placement:** `T.workers.place` can track worker IDs; `T.workers.returnAll(board, { ids: true })` returns tracked IDs by player.
 - CLI: Added `--time <seconds>` to `simulate` and `balance` to set their time limit (60 seconds by default).
-- **Mechanics library** on the rules kit — [docs/mechanics.md](docs/mechanics.md) catalogs 40+ board-game mechanics and
-  the helpers that implement them: `T.turns` (pass to end the round, snake and initiative order), `T.flow` (rounds,
-  phases, "finish the round"), `T.pending` (decision/reaction stack), `T.workers`, `T.rondel`, `T.track`, `T.secret`
-  (simultaneous commit/reveal), `T.auction` (open, once-around, Dutch, sealed first/second price), `T.vote`, `T.trade`,
-  `T.roles`, `T.market`, `T.draft`, `T.deckbuild`, `T.tricks`, `T.dice` and `T.bag` (with exact odds), `T.grid` (square
-  grids, line of sight, n-in-a-row, polyominoes), `T.score` (rankings with tie-breakers, ready `endIf` results),
-  `T.sets`, `T.area` (majorities with tie rules). Identical in the host and the sandbox.
-- **TypeScript declarations** for every entry point and the game-module contract; `@table-craft/table-craft/game` gives plain-JS game
-  files autocomplete for `T`, `ctx`, scenes, HUD and fx (`/// <reference types="@table-craft/table-craft/game" />`).
-- **`npm create tablecraft`** — starter projects (`dice`, `cards`, `multiplayer`), published as `create-tablecraft`.
-- **Playground** on the site: live editor, referee and visual balance report in a worker, share links; an **examples
-  gallery**; shareable **replay links**. Code from a shared link only runs after the reader presses Run.
-- `Match#record()` and `client.record()` on local matches → `{ seed, players, options, moves, startedAt }`.
-- New examples: Spice Bazaar (drafting), Harbor Workers (worker placement), Auction House (auctions), Drop Four
-  (square grid), Liar's Dice (private rolls, odds) and Lantern Tricks (trick-taking).
-- Project: CODE_OF_CONDUCT, SECURITY (threat model), ROADMAP, issue and PR templates, ESLint, Node 22/24 CI with
-  typecheck and coverage, tag-triggered npm publish with provenance.
-- Hex maps: `layout: 'hex'` zones (pointy or flat, axial `'q,r'` cells) and `hex` tile objects with terrain presets
-  (forest, hills, mountain, city, wasteland, water…), heights, faces on top and an outline glow when selectable.
-- Objects in a hex zone are placed on a `cell`, a `corner` / `vertex` or a `side` / `edge`, stand on the highest tile
-  they touch and are spread when several share a place.
-- `link` objects: roads, routes and supply lines between two objects or hex places (solid, dashed, dotted or
-  segmented), clickable through a wider invisible strip.
-- Hex tile faces take `rotate` (degrees, clockwise seen from above) to turn only the art, e.g. a coastline towards the sea.
-- `ghost: true` draws tokens, tiles and links see-through, for placement previews and unclaimed routes.
-- Rules kit: `T.hex` (neighbours, distance, rings, lines, canonical corner/edge keys, corner/edge graph, cell paths),
-  `T.findPath` and `T.reachable`.
-- Scene checks for hex positions and link ends; `supply-lines` example and MCP template.
+- CLI: `simulate`, `audit` and `balance` accept `--json` to print the complete report as JSON (a sweep prints the array of value and report objects).
+- **HUD:** `hud.stage` puts one moment in the middle of the table for every player (a fight or an encounter): up to four cards, an optional vs glyph, dice with a total, a few lines and an outcome badge. It is driven by the view, players can tuck it away and a new `id` brings it back.
+- **`npm create tablecraft`:** the starter templates depend on `^0.2.0`.
 
-### Fixed
-- `validate()` always passes `options.content` to `setup` (`{}` when none was given), like matches and the referee do.
-- The Spotlight no longer announces face-down cards that land in your own seat (cards dealt, drafted or passed to you).
-- Docs now cover every scene prop, fx option and client field the engine reads (zone `hexSize`/`marks`/`y`, link
-  `dashed`/`inset`, private rolls with `to`, `sound` volume, snapshot fields, form values arriving as strings).
-- The Spotlight, side columns and hover preview used bare modifier classes (`side`, `left`, `right`, `center`) that
-  collide with host-page CSS — e.g. an app sidebar's `.side { height: 100vh }` stretched the Spotlight over the whole
-  left edge on your turn. They are now `tc-spot-side` / `tc-spot-center`, `tc-side-l` / `tc-side-r` and
-  `tc-hover-l` / `tc-hover-r`.
-- Seats narrower than a large centre zone (a map) were pulled in over it; zone edges are now sampled when seats are
-  placed.
+### Changed
+- **Selectable objects:** a clickable card, token, die or board now gets a contrast frame around its edge (dark band + bright core, the object's corner radius) that beats like a heart, instead of a soft glow under it that was hard to follow on light tables and under fanned hands. The frame rides on top of flat objects, so a hand card that lifts on hover keeps it. `glow` colours the frame; without `click` it pulses gently. Hex tiles keep their outline and beat too; links keep the soft glow. `prefers-reduced-motion` gets a steady frame. The `highlight` fx flashes the same frame.
+- Dutch auctions: `T.auction.take` now rejects IDs not in `order`, and creating one with no participants closes it immediately.
 
 ## [0.1.0] — 2026-10-20
 
@@ -100,3 +70,48 @@ First public release.
 ### Site
 - Landing page with a playable in-browser demo, a full-screen playground and a documentation site generated from `docs/`
   (search, on-this-page navigation, copyable code, mobile menu).
+
+### Also in 0.1.0
+These were in the published 0.1.0 package (tag `v0.1.0`) but were left under Unreleased in its notes.
+
+#### Added
+- **Mechanics library** on the rules kit — [docs/mechanics.md](docs/mechanics.md) catalogs 40+ board-game mechanics and
+  the helpers that implement them: `T.turns` (pass to end the round, snake and initiative order), `T.flow` (rounds,
+  phases, "finish the round"), `T.pending` (decision/reaction stack), `T.workers`, `T.rondel`, `T.track`, `T.secret`
+  (simultaneous commit/reveal), `T.auction` (open, once-around, Dutch, sealed first/second price), `T.vote`, `T.trade`,
+  `T.roles`, `T.market`, `T.draft`, `T.deckbuild`, `T.tricks`, `T.dice` and `T.bag` (with exact odds), `T.grid` (square
+  grids, line of sight, n-in-a-row, polyominoes), `T.score` (rankings with tie-breakers, ready `endIf` results),
+  `T.sets`, `T.area` (majorities with tie rules). Identical in the host and the sandbox.
+- **TypeScript declarations** for every entry point and the game-module contract; `@table-craft/table-craft/game` gives plain-JS game
+  files autocomplete for `T`, `ctx`, scenes, HUD and fx (`/// <reference types="@table-craft/table-craft/game" />`).
+- **`npm create tablecraft`** — starter projects (`dice`, `cards`, `multiplayer`), published as `create-tablecraft`.
+- **Playground** on the site: live editor, referee and visual balance report in a worker, share links; an **examples
+  gallery**; shareable **replay links**. Code from a shared link only runs after the reader presses Run.
+- `Match#record()` and `client.record()` on local matches → `{ seed, players, options, moves, startedAt }`.
+- New examples: Spice Bazaar (drafting), Harbor Workers (worker placement), Auction House (auctions), Drop Four
+  (square grid), Liar's Dice (private rolls, odds) and Lantern Tricks (trick-taking).
+- Project: CODE_OF_CONDUCT, SECURITY (threat model), ROADMAP, issue and PR templates, ESLint, Node 22/24 CI with
+  typecheck and coverage, tag-triggered npm publish with provenance.
+- Hex maps: `layout: 'hex'` zones (pointy or flat, axial `'q,r'` cells) and `hex` tile objects with terrain presets
+  (forest, hills, mountain, city, wasteland, water…), heights, faces on top and an outline glow when selectable.
+- Objects in a hex zone are placed on a `cell`, a `corner` / `vertex` or a `side` / `edge`, stand on the highest tile
+  they touch and are spread when several share a place.
+- `link` objects: roads, routes and supply lines between two objects or hex places (solid, dashed, dotted or
+  segmented), clickable through a wider invisible strip.
+- Hex tile faces take `rotate` (degrees, clockwise seen from above) to turn only the art, e.g. a coastline towards the sea.
+- `ghost: true` draws tokens, tiles and links see-through, for placement previews and unclaimed routes.
+- Rules kit: `T.hex` (neighbours, distance, rings, lines, canonical corner/edge keys, corner/edge graph, cell paths),
+  `T.findPath` and `T.reachable`.
+- Scene checks for hex positions and link ends; `supply-lines` example and MCP template.
+
+#### Fixed
+- `validate()` always passes `options.content` to `setup` (`{}` when none was given), like matches and the referee do.
+- The Spotlight no longer announces face-down cards that land in your own seat (cards dealt, drafted or passed to you).
+- Docs now cover every scene prop, fx option and client field the engine reads (zone `hexSize`/`marks`/`y`, link
+  `dashed`/`inset`, private rolls with `to`, `sound` volume, snapshot fields, form values arriving as strings).
+- The Spotlight, side columns and hover preview used bare modifier classes (`side`, `left`, `right`, `center`) that
+  collide with host-page CSS — e.g. an app sidebar's `.side { height: 100vh }` stretched the Spotlight over the whole
+  left edge on your turn. They are now `tc-spot-side` / `tc-spot-center`, `tc-side-l` / `tc-side-r` and
+  `tc-hover-l` / `tc-hover-r`.
+- Seats narrower than a large centre zone (a map) were pulled in over it; zone edges are now sampled when seats are
+  placed.

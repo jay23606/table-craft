@@ -1,6 +1,6 @@
 {
   "name": "create-tablecraft",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Create a board game or card game project with Tablecraft in seconds: npm create tablecraft (Vite + React, dice, cards and multiplayer templates).",
   "license": "MIT",
   "type": "module",

@@ -15,7 +15,7 @@
     "cannon-es": "^0.20.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "@table-craft/table-craft": "^0.1.0",
+    "@table-craft/table-craft": "^0.2.0",
     "three": "^0.160.0"
   },
   "devDependencies": {

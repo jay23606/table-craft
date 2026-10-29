@@ -433,10 +433,14 @@ test('T.auction: open ascending, once around, dutch, sealed and legal bids', () 
   assert.equal(T.auction.lower(d), null); // 1 is below the floor: no sale
   assert.ok(T.auction.done(d));
   assert.ok(!T.auction.take(d, 'a'));
-  const d2 = T.auction.create([], { kind: 'dutch', price: 10, step: 3 });
+  const d2 = T.auction.create(['b'], { kind: 'dutch', price: 10, step: 3 });
   T.auction.lower(d2);
   assert.ok(T.auction.take(d2, 'b'));
   assert.deepEqual(T.auction.winner(d2), { id: 'b', price: 7 });
+  const legacy = T.auction.create(['b'], { kind: 'dutch', price: 10 });
+  delete legacy.declined;
+  assert.doesNotThrow(() => assert.ok(T.auction.take(legacy, 'b')));
+  assert.deepEqual(T.auction.winner(legacy), { id: 'b', price: 10 });
 
   assert.deepEqual(T.auction.sealed({ a: 5, b: 9, c: 9, d: 2 }, { order: ['c', 'b'] }), { id: 'c', bid: 9, price: 9, tied: ['b', 'c'] });
   assert.equal(T.auction.sealed({ a: 5, b: 9, c: 9 }).id, 'b');
@@ -457,6 +461,54 @@ test('T.auction: exclude bidders from open and once-around auctions', () => {
   const empty = T.auction.create(['a', 'b'], { kind: 'once', exclude: ['a', 'b'] });
   assert.ok(T.auction.done(empty));
   assert.equal(T.auction.winner(empty), null);
+});
+
+test('T.auction: Dutch declines lower once per price and only eligible bidders may respond', () => {
+  const a = T.auction.create(['auctioneer', 'a', 'b'], { kind: 'dutch', price: 12, step: 3, floor: 4, exclude: ['auctioneer'] });
+  assert.deepEqual(a.order, ['a', 'b']);
+  assert.deepEqual(a.declined, []);
+  assert.ok(!T.auction.take(a, 'auctioneer'));
+  const beforeOutsiderTake = { ...a, order: [...a.order], declined: [...a.declined] };
+  assert.ok(!T.auction.take(a, 'outsider'));
+  assert.deepEqual(a, beforeOutsiderTake);
+  assert.ok(!T.auction.decline(a, 'auctioneer'));
+  assert.ok(!T.auction.decline(a, 'outsider'));
+
+  assert.ok(T.auction.decline(a, 'a'));
+  assert.equal(a.price, 12);
+  assert.deepEqual(a.declined, ['a']);
+  assert.ok(!T.auction.decline(a, 'a'));
+  const beforeDeclinedTake = { ...a, order: [...a.order], declined: [...a.declined] };
+  assert.ok(!T.auction.take(a, 'a')); // declined at this price
+  assert.deepEqual(a, beforeDeclinedTake);
+  assert.ok(T.auction.decline(a, 'b'));
+  assert.equal(a.price, 9); // the last eligible decline lowers exactly one step
+  assert.deepEqual(a.declined, []);
+
+  assert.ok(T.auction.decline(a, 'a'));
+  assert.equal(T.auction.lower(a), 6); // manual lowering also clears responses
+  assert.deepEqual(a.declined, []);
+  assert.ok(T.auction.take(a, 'a')); // a may take after the price changes
+  assert.deepEqual(T.auction.winner(a), { id: 'a', price: 6 });
+  assert.ok(!T.auction.decline(a, 'b'));
+
+  const floor = T.auction.create(['a', 'b'], { kind: 'dutch', price: 6, step: 3, floor: 4 });
+  assert.ok(T.auction.decline(floor, 'a'));
+  assert.ok(T.auction.decline(floor, 'b'));
+  assert.ok(floor.closed);
+  assert.equal(floor.price, 6);
+  assert.deepEqual(floor.declined, []);
+  assert.ok(T.auction.done(floor));
+  const beforeClosedTake = { ...floor, order: [...floor.order], declined: [...floor.declined] };
+  assert.ok(!T.auction.take(floor, 'a'));
+  assert.deepEqual(floor, beforeClosedTake);
+  assert.ok(!T.auction.decline(floor, 'a'));
+
+  const empty = T.auction.create(['auctioneer'], { kind: 'dutch', exclude: ['auctioneer'] });
+  assert.ok(T.auction.done(empty)); // no eligible bidder means there is no auction to wait on
+  assert.equal(T.auction.winner(empty), null);
+  assert.equal(T.auction.lower(empty), null);
+  assert.ok(!T.auction.decline(empty, 'auctioneer'));
 });
 
 test('T.vote: plurality, ties, weights and majorities', () => {
@@ -609,7 +661,10 @@ function probe(T, random) {
   const f = T.flow.create(['x', 'y'], { rounds: 2 }); T.flow.next(f); T.flow.next(f); out.flow = f;
   const pend = []; T.pending.push(pend, { playerId: 'a', options: [1, 2] }); out.pending = T.pending.actions(pend, 'a');
   const sec = T.secret.create(['a', 'b']); T.secret.commit(sec, 'a', 3); out.secret = T.secret.view(sec, 'b');
-  const au = T.auction.create(['a', 'b']); T.auction.bid(au, 'a', 2); T.auction.pass(au, 'b'); out.auction = [T.auction.winner(au), T.auction.sealed({ a: 1, b: 1 }, { random })];
+  const au = T.auction.create(['a', 'b']); T.auction.bid(au, 'a', 2); T.auction.pass(au, 'b');
+  const dutch = T.auction.create(['auctioneer', 'a', 'b'], { kind: 'dutch', price: 8, step: 2, exclude: ['auctioneer'] });
+  T.auction.decline(dutch, 'a'); T.auction.decline(dutch, 'b');
+  out.auction = [T.auction.winner(au), T.auction.sealed({ a: 1, b: 1 }, { random }), dutch];
   const excludedAuction = T.auction.create(['a', 'b'], { kind: 'once', exclude: ['a'] }); out.auctionExclude = [excludedAuction.order, T.auction.turn(excludedAuction)];
   const hands = { a: [1], b: [2] }; T.draft.pass(hands, ['a', 'b']); out.draft = hands;
   const deck = random.shuffle(T.range(20)); const row = []; T.market.refill(row, 4, deck, [], random); T.market.take(row, 1); out.market = row;

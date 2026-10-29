@@ -359,8 +359,10 @@ export interface TurnAuction {
 export interface DutchAuction {
   /** Discriminator. */
   kind: 'dutch';
-  /** Bidders. */
+  /** Eligible bidders after any ids in the create options are excluded. */
   order: PlayerId[];
+  /** Bidders who declined at the current price. Cleared whenever the price changes. */
+  declined: PlayerId[];
   /** Current price. */
   price: number;
   /** Price drop per `lower`. */
@@ -371,7 +373,7 @@ export interface DutchAuction {
   leader: PlayerId | null;
   /** Price paid. */
   high: number;
-  /** Closed without a sale. */
+  /** Closed without a sale, including when no eligible bidders remain. */
   closed: boolean;
 }
 
@@ -380,7 +382,7 @@ export type Auction = TurnAuction | DutchAuction;
 
 /** `T.auction`: open, once-around, Dutch and sealed-bid auctions. */
 export interface AuctionKit {
-  /** New auction; `start`: seat index or id of the first eligible bidder; `exclude` omits bidders. */
+  /** New auction; `start`: seat index or id of the first eligible bidder. `exclude` omits bidders from every kind. */
   create(ids: readonly PlayerId[], opts?: { kind?: 'open' | 'once' | 'dutch'; min?: number; step?: number; start?: number | PlayerId; price?: number; floor?: number; exclude?: readonly PlayerId[] }): Auction;
   /** Is it over? */
   done(a: Auction): boolean;
@@ -394,9 +396,11 @@ export interface AuctionKit {
   pass(a: Auction, id: PlayerId): boolean;
   /** The amounts `id` may bid now, up to `budget`. */
   legalBids(a: Auction, id: PlayerId, budget: number): number[];
-  /** Dutch: lower the price one step → the new price, or `null` when it would drop below the floor (no sale). */
+  /** Dutch: lower the price one step → the new price, or `null` when it would drop below the floor (no sale). Clears current declines. */
   lower(a: Auction): number | null;
-  /** Dutch: take the offer at the current price. */
+  /** Dutch: record a decline; lowers once all eligible bidders decline. `false` for nonparticipants, duplicates or a closed auction. */
+  decline(a: Auction, id: PlayerId): boolean;
+  /** Dutch: take the offer at the current price; `false` for nonparticipants, current-price decliners or a closed auction. */
   take(a: Auction, id: PlayerId): boolean;
   /** `{ id, price }` once the auction is over and someone won, else `null`. */
   winner(a: Auction): { id: PlayerId; price: number } | null;
